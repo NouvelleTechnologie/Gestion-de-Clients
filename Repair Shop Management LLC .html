@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.15/jspdf.plugin.autotable.min.js"></script>
+
+    <title>Gestion Atelier de Réparation</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="Ams.css" type="text/css" media="all" />
+</head>
+
+<body class="bg-gray-100">
+        <div class="max-w-7xl mx-auto p-4">
+        <header class="bg-white shadow-lg rounded-lg p-6 mb-6 fade-in">
+            <div class="flex justify-between items-center">
+                <h1 class="text-3xl font-bold text-gray-800">Gestion Atelier de Réparation</h1>
+                <div class="text-sm text-gray-500">
+                    <span id="currentDate"></span>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Statistiques -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-semibold text-gray-600">Total Réparations</h3>
+                <p id="totalRepairs" class="text-3xl font-bold text-gray-800">0</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-semibold text-gray-600">En Cours</h3>
+                <p id="activeRepairs" class="text-3xl font-bold text-blue-600">0</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-semibold text-gray-600">Revenu Total</h3>
+                <p id="totalRevenue" class="text-3xl font-bold text-green-600">0 FCFA</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-semibold text-gray-600">Taux de Complétion</h3>
+                <p id="completionRate" class="text-3xl font-bold text-purple-600">0%</p>
+            </div>
+        </div>
+        <!-- Formulaire nouvelle réparation -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4">Nouvelle Réparation</h2>
+            <form id="repairForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <input type="text" id="customerName" placeholder="Nom du client" required
+                    class="border rounded-lg px-4 py-2">
+                <input type="text" id="itemName" placeholder="Appareil" required
+                    class="border rounded-lg px-4 py-2">
+                <input type="text" id="issue" placeholder="Problème" required
+                    class="border rounded-lg px-4 py-2">
+                <input type="number" id="cost" placeholder="Coût (FCFA)" required
+                    class="border rounded-lg px-4 py-2">
+                <div class="col-span-full">
+                    <textarea id="notes" placeholder="Notes supplémentaires"
+                        class="border rounded-lg px-4 py-2 w-full h-24"></textarea>
+                </div>
+                <button type="submit"
+                    class="col-span-full bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+                    Ajouter Réparation
+                </button>
+            </form>
+        </div>
+        <!-- Filtres et recherche -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <div class="flex flex-col md:flex-row gap-4 justify-between">
+                <input type="text" id="searchInput" placeholder="Rechercher..."
+                    class="border rounded-lg px-4 py-2 flex-1">
+                <div class="flex gap-2">
+                    <select id="statusFilter" class="border rounded-lg px-4 py-2">
+                        <option value="all">Tous les statuts</option>
+                        <option value="pending">En attente</option>
+                        <option value="progress">En cours</option>
+                        <option value="completed">Terminé</option>
+                    </select>
+                    <select id="sortBy" class="border rounded-lg px-4 py-2">
+                        <option value="date">Date</option>
+                        <option value="customer">Client</option>
+                        <option value="status">Statut</option>
+                        <option value="cost">Coût</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <!-- Liste des réparations -->
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Appareil</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Problème</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Coût</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="repairsList">
+                        <!-- Les réparations seront insérées ici par JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <!-- Modal détails réparation -->
+    <div id="repairModal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-xl font-bold mb-4">Détails de la Réparation</h2>
+            <div id="repairDetails">
+                <!-- Les détails seront insérés ici -->
+            </div>
+            <button onclick="closeModal()" class="mt-4 bg-gray-500 text-white px-4 py-2 rounded">Fermer</button>
+        </div>
+    </div>
+    <div class="fixed bottom-4 right-4 flex flex-col gap-2">
+        <button onclick="showExportModal()" 
+            class="bg-green-500 text-white px-4 py-2 rounded-full shadow-lg hover:bg-green-600">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+            </svg>
+        </button>
+        <button onclick="showRemindersModal()" 
+            class="bg-blue-500 text-white px-4 py-2 rounded-full shadow-lg hover:bg-blue-600 relative">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/>
+            </svg>
+            <span id="reminderCount" class="notification-badge hidden">0</span>
+        </button>
+    </div>
+
+    <!-- Nouveau modal pour les rappels -->
+    <div id="remindersModal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-xl font-bold mb-4">Rappels</h2>
+            <div id="remindersList" class="max-h-96 overflow-y-auto">
+                <!-- Les rappels seront insérés ici -->
+            </div>
+            <div class="mt-4">
+                <h3 class="font-semibold mb-2">Ajouter un rappel</h3>
+                <form id="reminderForm" class="space-y-4">
+                    <input type="text" id="reminderTitle" placeholder="Titre" required
+                        class="w-full border rounded-lg px-4 py-2">
+                    <textarea id="reminderDescription" placeholder="Description"
+                        class="w-full border rounded-lg px-4 py-2"></textarea>
+                    <input type="datetime-local" id="reminderDate" required
+                        class="w-full border rounded-lg px-4 py-2">
+                    <button type="submit"
+                        class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+                        Ajouter Rappel
+                    </button>
+                </form>
+            </div>
+            <button onclick="closeRemindersModal()" 
+                class="mt-4 bg-gray-500 text-white px-4 py-2 rounded">
+                Fermer
+            </button>
+        </div>
+    </div>
+
+    <!-- Nouveau modal pour l'export -->
+    <div id="exportModal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-xl font-bold mb-4">Export des données</h2>
+            <div class="space-y-4">
+                <button onclick="exportToPDF()" 
+                    class="w-full bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                    Exporter en PDF
+                </button>
+                <button onclick="exportToExcel()" 
+                    class="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                    Exporter en Excel
+                </button>
+                <button onclick="exportToJSON()" 
+                    class="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                    Exporter en JSON
+                </button>
+            </div>
+            <button onclick="closeExportModal()" 
+                class="mt-4 bg-gray-500 text-white px-4 py-2 rounded">
+                Fermer
+            </button>
+        </div>
+    </div>
+<button onclick="showDataManagementModal()" 
+    class="bg-red-500 text-white px-4 py-2 rounded-full shadow-lg hover:bg-red-600">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 000 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/>
+    </svg>
+</button>
+<button onclick="generateDetailedReport()" 
+    class="bg-purple-500 text-white px-4 py-2 rounded-full shadow-lg hover:bg-purple-600">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+</button>
+<button onclick="createRepairTrendGraph()" 
+    class="bg-indigo-500 text-white px-4 py-2 rounded-full shadow-lg hover:bg-indigo-600">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12H4V4z" />
+    </svg>
+</button>
+    <!-- Ajout du script pour les nouvelles fonctionnalités -->
+    <script src="Ams.js" type="text/javascript" charset="utf-8"></script>
+    <script src="Amd." type="text/javascript" charset="utf-8"></script>
+
+</body>
+</html>
